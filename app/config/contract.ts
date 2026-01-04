@@ -1,6 +1,4 @@
-import { Address } from "viem"
-
-export const SUPPLY_CHAIN_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3" as Address;
+export const SUPPLY_CHAIN_ADDRESS = process.env.NEXT_PUBLIC_SUPPLY_CHAIN_ADDRESS as `0x${string}`;
 
 export const SUPPLY_CHAIN_ABI = [
     {
@@ -281,4 +279,4 @@ export const SUPPLY_CHAIN_ABI = [
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ]
+  ] as const;

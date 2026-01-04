@@ -52,7 +52,11 @@ contract SupplyChainEscrow {
         Shipment storage shipment = shipments[shipmentId];
 
         require(shipmentId != 0, "Shipment not found!");
-        require(msg.sender == shipment.buyer || msg.sender == shipment.seller, "Not authorized");
+        
+        require(
+            msg.sender == shipment.seller,
+            "Only seller can update shipment status"
+        );
 
         require(uint256(newStatus) == uint256(shipment.status) + 1, "Invalid status transition");
 

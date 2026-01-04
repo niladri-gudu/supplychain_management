@@ -1,7 +1,7 @@
-import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
+import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 export default buildModule("SupplyChainEscrowModule", (m) => {
-    const supplyChainEscrow = m.contract("SupplyChainEscrow");
+  const supplyChainEscrow = m.contract("SupplyChainEscrow");
 
-    return { supplyChainEscrow }
-})
+  return { supplyChainEscrow };
+});

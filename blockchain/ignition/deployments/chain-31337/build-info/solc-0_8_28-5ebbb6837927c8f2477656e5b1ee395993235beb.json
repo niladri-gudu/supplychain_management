@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-5ebbb6837927c8f2477656e5b1ee395993235beb",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/SupplyChainEscrow.sol": "project/contracts/SupplyChainEscrow.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/SupplyChainEscrow.sol": {
+        "content": "// SPDX-License-Identifier: None\r\npragma solidity ^0.8.20;\r\n\r\ncontract SupplyChainEscrow {\r\n    enum Status {\r\n        Pending,\r\n        InTransit,\r\n        Delivered\r\n    }\r\n\r\n    struct Shipment {\r\n        uint256 id;\r\n        address buyer;\r\n        address seller;\r\n        uint256 amount;\r\n        Status status;\r\n        uint256 createdAt;\r\n    }\r\n\r\n    uint256 public shipmentCount;\r\n\r\n    mapping (uint256 => Shipment) public shipments;\r\n    mapping (address => uint256[]) private userShipments;\r\n\r\n    event ShipmentCreated(uint256 indexed id, address indexed buyer, address indexed seller, uint256 amount);\r\n\r\n    event StatusUpdated(uint256 indexed id, Status status);\r\n    event FundsReleased(uint256 indexed id, address seller, uint256 amount);\r\n\r\n    function createShipment(address seller) external payable {\r\n        require(msg.value > 0, \"Escrow amount required\");\r\n        require(seller != address(0), \"Invalid seller!\");\r\n\r\n        shipmentCount++;\r\n\r\n        shipments[shipmentCount] = Shipment({\r\n            id: shipmentCount,\r\n            buyer: msg.sender,\r\n            seller: seller,\r\n            amount: msg.value,\r\n            status: Status.Pending,\r\n            createdAt: block.timestamp\r\n        });\r\n\r\n        userShipments[msg.sender].push(shipmentCount);\r\n        userShipments[seller].push(shipmentCount);\r\n        \r\n        emit ShipmentCreated(shipmentCount, msg.sender, seller, msg.value);\r\n    }\r\n\r\n    function updateStatus(uint256 shipmentId, Status newStatus) external {\r\n        Shipment storage shipment = shipments[shipmentId];\r\n\r\n        require(shipmentId != 0, \"Shipment not found!\");\r\n        \r\n        require(\r\n            msg.sender == shipment.seller,\r\n            \"Only seller can update shipment status\"\r\n        );\r\n\r\n        require(uint256(newStatus) == uint256(shipment.status) + 1, \"Invalid status transition\");\r\n\r\n        shipment.status = newStatus;\r\n\r\n        emit StatusUpdated(shipmentId, newStatus);\r\n\r\n        if (newStatus == Status.Delivered) {\r\n            _releaseFunds(shipmentId);\r\n        }\r\n    }\r\n\r\n    function _releaseFunds(uint256 shipmentId) internal {\r\n        Shipment storage shipment = shipments[shipmentId];\r\n        uint256 amount = shipment.amount;\r\n\r\n        shipment.amount = 0;\r\n\r\n        (bool success, ) = shipment.seller.call{value: amount}(\"\");\r\n        require(success, \"ETH transfer failed\");\r\n\r\n        emit FundsReleased(shipmentId, shipment.seller, amount);\r\n    }\r\n\r\n    function getShipment(uint256 shipmentId) external view returns (Shipment memory) {\r\n        return shipments[shipmentId];\r\n    }\r\n\r\n    function getUserShipments(address user) external view returns (uint256[] memory) {\r\n        return userShipments[user];\r\n    }\r\n\r\n    function getAllShipments() external view returns (Shipment[] memory) {\r\n        Shipment[] memory all = new Shipment[](shipmentCount);\r\n\r\n        for (uint256 i = 1 ; i <= shipmentCount ; i++) {\r\n            all[i - 1] = shipments[i];\r\n        }\r\n\r\n        return all;\r\n    }\r\n\r\n}"
+      }
+    }
+  }
+}
